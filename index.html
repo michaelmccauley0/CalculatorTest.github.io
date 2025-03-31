@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASM Calculator</title>
+</head>
+<body>
+    <h2>WASM Calculator</h2>
+    <input type="number" id="num1" placeholder="Enter first number">
+    <select id="operator">
+        <option value="add">+</option>
+        <option value="subtract">-</option>
+        <option value="multiply">*</option>
+        <option value="divide">/</option>
+    </select>
+    <input type="number" id="num2" placeholder="Enter second number">
+    <button onclick="calculate()">Calculate</button>
+    <p>Result: <span id="result"></span></p>
+    
+    <script>
+        let wasmInstance;
+        
+        async function loadWASM() {
+            const response = await fetch("Calculator.wasm");
+            const bytes = await response.arrayBuffer();
+            const { instance } = await WebAssembly.instantiate(bytes, {});
+            wasmInstance = instance.exports;
+        }
+        
+        async function calculate() {
+            if (!wasmInstance) await loadWASM();
+            
+            let num1 = parseFloat(document.getElementById("num1").value);
+            let num2 = parseFloat(document.getElementById("num2").value);
+            let operator = document.getElementById("operator").value;
+            let result;
+            
+            switch (operator) {
+                case "add": result = wasmInstance.add(num1, num2); break;
+                case "subtract": result = wasmInstance.subtract(num1, num2); break;
+                case "multiply": result = wasmInstance.multiply(num1, num2); break;
+                case "divide": result = num2 !== 0 ? wasmInstance.divide(num1, num2) : "Error"; break;
+            }
+            
+            document.getElementById("result").innerText = result;
+        }
+        
+        loadWASM();
+    </script>
+</body>
+</html>
